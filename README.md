@@ -26,11 +26,17 @@ Virtualenv is used to ensure clean environment before starting the app. (Not nec
 # Install virtualenv, if not installed yet
 pip install virtualenv
 
+# New virtualenv (default python)
+virtualenv venv
+
+# New virtualenv (specify python3)
+virtualenv -p python3 venv
+
 # Activate virtualenv
 venv\Scripts\activate
 
 # Install requirements.txt
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Usage
@@ -40,9 +46,9 @@ pip3 install -r requirements.txt
 3. Perform below commands to auto-initialize DB schemas
 ```bash
 # Execute this command to initialize DB schemas
-python3 .\manage.py db init
-python3 .\manage.py db migrate
-python3 .\manage.py db upgrade
+python .\manage.py db init
+python .\manage.py db migrate
+python .\manage.py db upgrade
 ```
 4. Do a manual insert to start with minimum data in the database
 ```sql
@@ -63,7 +69,7 @@ MAIL_DEFAULT_SENDER = 'dev@gmail.com'
 6. Run the app
 ```bash
 # Execute this command and application will run on http://localhost:5000/
-python3 .\manage.py runserver
+python .\manage.py runserver
 ```
 
 ## Endpoints
