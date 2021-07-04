@@ -92,6 +92,7 @@ python .\manage.py runserver
 - [ ] Password hashing, reset password, forgot password
 - [ ] Email HTML template
 - [ ] Cloud storage to store QR code
+- [ ] Logging
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

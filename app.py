@@ -1,11 +1,9 @@
-from typing import Optional
-from flask import Flask, request, render_template, redirect, jsonify, make_response
+from flask import Flask
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 import config
-import jwt as jwt_lib
 
 
 app = Flask(__name__, static_url_path="", static_folder="static")
