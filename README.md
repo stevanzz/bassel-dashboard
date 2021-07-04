@@ -80,6 +80,13 @@ python3 .\manage.py runserver
 [http://localhost:5000/register-visitor](http://localhost:5000/register-visitor)
 
 
+## Future Enhancements
+- [ ] Individual schema for Apartment (unit number, owner email, owner name, tenant email, tenant name)
+- [ ] Implement refresh token for better security
+- [ ] Password hashing, reset password, forgot password
+- [ ] Email HTML template
+- [ ] Cloud storage to store QR code
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
