@@ -49,18 +49,4 @@ def user_identity_lookup(user):
     return user.to_dict()
 
 
-# Inject current_user object to all templates
-# This is to control sidebar menu based on user access
-@app.context_processor
-def inject_dict_for_all_templates():
-    access_token = request.cookies.get('access_token')
-    try:
-        if access_token:
-            data = jwt_lib.decode(access_token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
-            return dict(current_user=data['sub'])
-        else:
-            return dict()
-    except Exception as e:
-        return dict()
-
 

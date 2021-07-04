@@ -1,4 +1,4 @@
-from flask import Flask, render_template, make_response, redirect, jsonify, request, jsonify
+from flask import Flask, render_template, make_response, redirect, jsonify, request, jsonify, url_for
 from flask_restful import Resource, Api
 from flask_jwt_extended import create_access_token
 from flask_mail import Message
@@ -11,39 +11,51 @@ import datetime
 import base64
 import qrcode
 
+
 # Custom decorator to validate JWT
 # flask_jwt_extended.set_access_cookies is not working properly
-
-
 def login_required():
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
+            access_token = request.cookies.get('access_token')
             try:
-                access_token = request.cookies.get('access_token')
+                if not access_token:
+                    raise APIError(401, 'JWT not found')
+
                 jwt_lib.decode(
                     access_token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
-                if not access_token:
-                    print('access_token not found, redirecting to login page')
-                    response = make_response(render_template('home.html'), 200)
-                    response.delete_cookie('access_token')
-                    return response
-                return fn(*args, **kwargs)
             except Exception as e:
-                return fn(*args, **kwargs)
-                # response = make_response(render_template('home.html'), 200)
-                # response.delete_cookie('access_token')
-                # return response
+                return redirect(url_for('login'))
+
+            return fn(*args, **kwargs)
+
         return decorator
 
     return wrapper
+
+
+# Inject current_user object to all templates
+# This is to control sidebar menu based on user access
+@app.context_processor
+def inject_dict_for_all_templates():
+    access_token = request.cookies.get('access_token')
+    try:
+        if access_token:
+            data = jwt_lib.decode(access_token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
+            return dict(current_user=data['sub'])
+        else:
+            return dict()
+    except Exception as e:
+        return dict()
 
 
 # ------------- FRONTEND -------------
 
 class Login(Resource):
     def get(self):
-        return make_response(render_template('home.html'), 200)
+        template = render_template('home.html')
+        return make_response(template, 200)
 
     def post(self):
         email = request.json.get("email", None)
