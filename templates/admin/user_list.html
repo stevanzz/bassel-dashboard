@@ -1,0 +1,409 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'User List' %}
+{% block content %}
+<div class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header card-header-primary">
+            <h4 class="card-title ">User List</h4>
+          </div>
+          <div class="card-body">
+            <button class="btn btn-primary o_create_user" data-toggle="modal" data-target="#createUserModal">Create
+              User</button>
+            <div class="table-responsive">
+              <table id="user-datatables" class="table table-striped table-no-bordered table-hover" cellspacing="0"
+                width="100%" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Apartment Number</th>
+                    <th>Role</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+              </table>
+
+              <div class="modal fade" id="updateUserModal" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">Update User</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <form id="modifyUser" novalidate>
+                        <div class="card">
+                          <div class="card-body">
+                            <div class="form-group bmd-form-group">
+                              <label for="email" class="bmd-label-floating">Email Address
+                                * </label>
+                              <input type="email" class="form-control" id="email-input" name="email-input" required="true"
+                                aria-required="true" disabled>
+                                <input type="hidden" name="email" id="email" value="">
+                            </div>
+                            <div class="form-group bmd-form-group">
+                              <label for="name" class="bmd-label-floating">Name * </label>
+                              <input type="text" class="form-control" id="name" name="name" required="true"
+                                aria-required="true">
+                            </div>
+                            <div class="form-group bmd-form-group">
+                              <label for="apartment_number" class="bmd-label-floating">Apartment Number</label>
+                              <input type="text" class="form-control" id="apartment_number" name="apartment_number">
+                            </div>
+                            <div class="row">
+                              <label class="col-sm-3 col-form-label label-checkbox">Role</label>
+                              <div class="col-sm-9 checkbox-radios">
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <input class="form-check-input" type="radio" id="administrator" name="role"
+                                      value="administrator">Administrator</input>
+                                    <span class="circle">
+                                      <span class="check"></span>
+                                    </span>
+                                  </label>
+                                </div>
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <input class="form-check-input" type="radio" id="guard" name="role"
+                                      value="guard">Guard</input>
+                                    <span class="circle">
+                                      <span class="check"></span>
+                                    </span>
+                                  </label>
+                                </div>
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <input class="form-check-input" type="radio" id="apartment_owner" name="role"
+                                      value="apartment_owner">Apartment Owner</input>
+                                    <span class="circle">
+                                      <span class="check"></span>
+                                    </span>
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-primary">Save
+                              changes</button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal fade" id="createUserModal" tabindex="-1" role="dialog"
+                aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="createUserModalLabel">Create User</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <form id="RegisterValidation" novalidate>
+                        <div class="card">
+                          <div class="card-body">
+                            <!-- <div class="form-group bmd-form-group">
+                              <label for="username" class="bmd-label-floating">Username
+                                *</label>
+                              <input type="text" class="form-control" id="username" name="username" required="true"
+                                aria-required="true">
+                            </div> -->
+                            <div class="form-group bmd-form-group">
+                              <label for="email" class="bmd-label-floating">Email Address
+                                * </label>
+                              <input type="email" class="form-control" id="email" name="email" required="true"
+                                aria-required="true">
+                            </div>
+                            <div class="form-group bmd-form-group">
+                              <label for="password" class="bmd-label-floating">Password
+                                *</label>
+                              <input type="password" class="form-control" id="register-password" required="true"
+                                name="password" aria-required="true">
+                            </div>
+                            <div class="form-group bmd-form-group">
+                              <label for="password1" class="bmd-label-floating">Confirm
+                                Password *</label>
+                              <input type="password" class="form-control" id="register-password1" required="true"
+                                equalto="#register-password" name="password_confirmation" aria-required="true">
+                            </div>
+                            <div class="form-group bmd-form-group">
+                              <label for="name" class="bmd-label-floating">Name * </label>
+                              <input type="text" class="form-control" id="name" name="name" required="true"
+                                aria-required="true">
+                            </div>
+                            <div class="form-group bmd-form-group">
+                              <label for="apartment_number" class="bmd-label-floating">Apartment Number</label>
+                              <input type="text" class="form-control" id="apartment_number" name="apartment_number">
+                            </div>
+                            <div class="row">
+                              <label class="col-sm-3 col-form-label label-checkbox">Role</label>
+                              <div class="col-sm-9 checkbox-radios">
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <input class="form-check-input" type="radio" id="administrator" name="role"
+                                      value="administrator">Administrator</input>
+                                    <span class="circle">
+                                      <span class="check"></span>
+                                    </span>
+                                  </label>
+                                </div>
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <input class="form-check-input" type="radio" id="guard" name="role"
+                                      value="guard">Guard</input>
+                                    <span class="circle">
+                                      <span class="check"></span>
+                                    </span>
+                                  </label>
+                                </div>
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <input class="form-check-input" type="radio" id="apartment_owner" name="role"
+                                      value="apartment_owner">Apartment Owner</input>
+                                    <span class="circle">
+                                      <span class="check"></span>
+                                    </span>
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-rose">Register</button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+{% block jquery_content %}
+
+<script>
+
+  function setFormValidation(id) {
+    $(id).validate({
+      highlight: function (element) {
+        $(element).closest('.form-group').removeClass('has-success').addClass('has-danger');
+        $(element).closest('.form-check').removeClass('has-success').addClass('has-danger');
+      },
+      success: function (element) {
+        $(element).closest('.form-group').removeClass('has-danger').addClass('has-success');
+        $(element).closest('.form-check').removeClass('has-danger').addClass('has-success');
+      },
+      errorPlacement: function (error, element) {
+        $(element).closest('.form-group').append(error);
+      },
+    });
+  }
+
+  function getFormData($form) {
+    var unindexed_array = $form.serializeArray();
+    var indexed_array = {};
+    $.map(unindexed_array, function (n, i) {
+      indexed_array[n['name']] = n['value'];
+    });
+
+    return indexed_array;
+  }
+
+  $(document).ready(function () {
+    var is_valid = setFormValidation('#RegisterValidation');
+
+    $("#RegisterValidation").submit(function (e) {
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action');
+      var is_valid = form.valid();
+      if (is_valid) {
+        var values = getFormData(form);
+
+        $.ajax({
+          type: "POST",
+          url: '/api/user',
+          contentType: "application/json; charset=utf-8",
+          data: JSON.stringify(values),
+          success: function (data) {
+            var success = '<div class="alert alert-success" role="alert">User has been created!</div>';
+            $('#RegisterValidation').prepend(success);
+
+            // Refetch DataTable data
+            var userTable = $("#user-datatables").DataTable();
+            userTable.draw();
+
+            // $('#createUserModal').modal('hide');
+            document.getElementById("RegisterValidation").reset();
+          },
+          error: function (request, error) {
+            // Create an error
+            $('#RegisterValidation > .alert-danger').remove();
+            var error = '<div class="alert alert-danger" role="alert">Username already exist</div>';
+            $('#RegisterValidation').prepend(error);
+          },
+        });
+      }
+    });
+
+    $("#modifyUser").submit(function (e) {
+      e.preventDefault();
+      var form = $(this);
+      var url = form.attr('action');
+      var is_valid = form.valid();
+      if (is_valid) {
+        var values = getFormData(form);
+
+        $.ajax({
+          type: "PUT",
+          url: '/api/user',
+          contentType: "application/json; charset=utf-8",
+          data: JSON.stringify(values),
+          success: function (data) {
+            var success = '<div class="alert alert-success" role="alert">User has been updated!</div>';
+            $('#modifyUser').prepend(success);
+
+            // Refetch DataTable data
+            var userTable = $("#user-datatables").DataTable();
+            userTable.draw();
+
+            // $('#updateUserModal').modal('hide');
+            // document.getElementById("modifyUser").reset();
+          },
+          error: function (request, error) {
+            // Create an error
+            $('#modifyUser > .alert-danger').remove();
+            var error = '<div class="alert alert-danger" role="alert">Username is not exist</div>';
+            $('#modifyUser').prepend(error);
+          },
+        });
+      }
+    });
+
+    $('#user-datatables').DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": "/api/users",
+      // add column definitions to map your json to the table
+      "columnDefs": [
+        { className: "pad-column", "targets": [0] },
+        { className: "pad-column", "targets": [1] },
+        { className: "pad-column", "targets": [2] },
+        { className: "pad-column", "targets": [3] },
+        { className: "td-actions text-right", "targets": [4], "orderable": false },
+      ],
+      "columns": [
+        { "data": "email" },
+        { "data": "name" },
+        { "data": "apartment_number" },
+        { "data": "role" },
+        { "data": "action" },
+      ],
+      "paging": true,
+      "pagingType": "full_numbers",
+      "pageLength": 10, // total records shown in one table
+      // "lengthMenu": [10, 25, 50, -1],
+      responsive: true,
+      language: {
+        search: "Search",
+        searchPlaceholder: "email",
+      }
+    });
+
+
+
+    var table = $('#user-datatables').DataTable();
+
+    // Edit record
+    table.on('click', '.edit', function () {
+      $tr = $(this).closest('tr');
+      if ($($tr).hasClass('child')) {
+        $tr = $tr.prev('.parent');
+      }
+      var data = JSON.parse($tr.attr("data-user"))
+      $("#modifyUser #email-input").val(data.email);
+      $("#modifyUser #email-input").parent().addClass("is-filled");
+      $("#modifyUser #email").val(data.email);
+      $("#modifyUser #name").val(data.name);
+      $("#modifyUser #name").parent().addClass("is-filled");
+      $("#modifyUser #apartment_number").val(data.apartment_number);
+      $("#modifyUser #apartment_number").parent().addClass("is-filled");
+      $(`#modifyUser #${data.role}`).prop('checked', true);
+
+      $tr.addClass("updating");
+
+      var modal = $('#updateUserModal').modal({
+        show: true
+      });
+      $('#modifyUser > .alert-success').remove();
+      $('#modifyUser > .alert-danger').remove();
+    });
+
+    // Delete a record
+    table.on('click', '.remove', function (e) {
+      var self = this;
+      $tr = $(this).closest('tr');
+      const tr_data = $tr.data();
+      const data_id = tr_data.id || 0;
+      if ($($tr).hasClass('child')) {
+        $tr = $tr.prev('.parent');
+      }
+      var data = table.row($tr).data();
+      const confirm_msg = `Are you sure want to delete \nemail: ${data['email']} ?`;
+      if (confirm(confirm_msg)) {
+        const url = `/api/user/${data_id}`
+        $.ajax({
+          type: "DELETE",
+          url: url,
+          contentType: "application/json; charset=utf-8",
+          success: function (data) {
+            table.row($tr).remove().draw();
+          }
+
+        });
+        console.log('Thing was saved to the database.', data_id);
+
+      }
+    });
+
+    $("#createUserModal").on('hide.bs.modal', function () {
+      $('#RegisterValidation > .alert-success').remove();
+      $('#RegisterValidation > .alert-danger').remove();
+    });
+
+    $("#updateUserModal").on('hide.bs.modal', function () {
+      $('.updating').removeClass("updating");
+      $('#modifyUser > .alert-success').remove();
+      $('#modifyUser > .alert-danger').remove();
+    });
+
+  });
+</script>
+{% endblock %}

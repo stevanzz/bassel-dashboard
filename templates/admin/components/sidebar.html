@@ -1,0 +1,40 @@
+<div class="sidebar" data-color="purple" data-background-color="white"
+  data-image="{{ url_for('static', filename='img/sidebar-1.jpg') }}">
+  <!--
+        Tip 1: You can change the color of the sidebar using: data-color="purple | azure | green | orange | danger"
+
+        Tip 2: you can also add an image using data-image tag
+      -->
+  <div class="logo"><a href="#!" class="simple-text logo-normal">
+      Dashboard
+    </a>
+  </div>
+  <div class="sidebar-wrapper">
+    <ul class="nav">
+      {% if current_user.role == 'administrator' or current_user.role == 'guard' %}
+      <li class="nav-item {% if active_page == 'Visitor Records' %} active {% endif %} ">
+        <a class="nav-link" href="./visitor-records">
+          <i class="material-icons">receipt</i>
+          <p>Visitor Records</p>
+        </a>
+      </li>
+      {% endif %}
+      {% if current_user.role == 'administrator' %}
+      <li class="nav-item {% if active_page == 'User List' %} active {% endif %} ">
+        <a class="nav-link" href="./users">
+          <i class="material-icons">content_paste</i>
+          <p>User List</p>
+        </a>
+      </li>
+      {% endif %}
+      {% if current_user.role == 'administrator' or current_user.role == 'apartment_owner' %}
+      <li class="nav-item {% if active_page == 'Register Visitor' %} active {% endif %} ">
+        <a class="nav-link" href="./register-visitor">
+          <i class="material-icons">qr_code</i>
+          <p>Register Visitor</p>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</div>

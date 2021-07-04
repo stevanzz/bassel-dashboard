@@ -1,0 +1,106 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'Register Visitor' %}
+
+{% block content %}
+<div class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <form id="register-visitor" novalidate>
+          <div class="card">
+            <div class="card-header card-header-primary card-header-icon">
+              <div class="card-icon">
+                <i class="material-icons">
+                  qr_code
+                </i>
+              </div>
+              <h4 class="card-title">Register Visitor</h4>
+            </div>
+            <div class="card-body">
+              <div class="form-group bmd-form-group">
+                <label for="guest_name" class="bmd-label-floating">Guest Name
+                  *</label>
+                <input type="text" class="form-control" id="guest_name" name="guest_name" required="true"
+                  aria-required="true">
+              </div>
+              <div class="form-group bmd-form-group">
+                <label for="guest_email" class="bmd-label-floating">Guest Email
+                  *</label>
+                <input type="email" class="form-control" id="guest_email" name="guest_email" required="true"
+                  aria-required="true">
+              </div>
+              <div class="form-group bmd-form-group">
+                <label for="guest_id" class="bmd-label-floating is-filled">Guest ID
+                  *</label>
+                <input type="text" class="form-control" id="guest_id" name="guest_id" required="true"
+                  aria-required="true">
+              </div>
+              <div class="form-group bmd-form-group">
+                <label for="guest_car_number" class="bmd-label-floating is-filled">Guest Car No</label>
+                <input type="text" class="form-control" id="guest_car_number" name="guest_car_number">
+              </div>
+              <div class="form-group bmd-form-group">
+                <label for="no_of_guests" class="bmd-label-floating is-filled">No of Guests</label>
+                <input type="text" class="form-control" id="no_of_guests" name="no_of_guests">
+              </div>
+              <input type="hidden" name="user_id" value="{{ current_user.id }}">
+            </div>
+            <div class="card-footer text-right">
+              <button type="submit" class="btn btn-primary">Register visitor</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block jquery_content %}
+<script>
+  function getFormData($form) {
+    var unindexed_array = $form.serializeArray();
+    var indexed_array = {};
+    $.map(unindexed_array, function (n, i) {
+      indexed_array[n['name']] = n['value'];
+    });
+
+    return indexed_array;
+  }
+
+  $("#register-visitor").submit(function (e) {
+    e.preventDefault();
+    var form = $(this);
+    var url = form.attr('action');
+    var is_valid = form.valid();
+    if (is_valid) {
+      var values = getFormData(form);
+
+      $.ajax({
+        type: "POST",
+        url: '/api/register-visitor',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(values),
+        success: function (data) {
+          document.getElementById("register-visitor").reset();
+          var success = '<div class="alert alert-success" role="alert">Visitor record has been saved! Email will be sent to Visitor</div>';
+          $('#register-visitor').prepend(success);
+          setTimeout(function () {
+            $('#register-visitor > .alert-success').remove();
+          }, 5000);
+        },
+        error: function (request, error) {
+          // Create an error
+          $('#register-visitor > .alert-danger').remove();
+          var error = '<div class="alert alert-danger" role="alert">Failed to register visitor!</div>';
+          $('#register-visitor').prepend(error);
+          setTimeout(function () {
+            $('#register-visitor > .alert-danger').remove();
+          }, 5000);
+        },
+      });
+    }
+  });
+</script>
+{% endblock %}
