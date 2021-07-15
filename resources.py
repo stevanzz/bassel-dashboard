@@ -1,20 +1,24 @@
-from flask import  render_template, make_response, redirect, jsonify, request, jsonify, url_for
+from flask import render_template, make_response, redirect, jsonify, request, jsonify, url_for
 from flask_restful import Resource
 from flask_jwt_extended import create_access_token
+from flask_login import login_required, login_user, logout_user, current_user
 from flask_mail import Message
+from flask_wtf.csrf import CSRFError
 import models
 from functools import wraps
-from app import app, db, mail
+from app import app, db, mail, login_manager
 import jwt as jwt_lib
 import json
 import datetime
 import base64
 import qrcode
+from utils import is_safe_url
+from forms import LoginForm, EditUserForm, CreateUserForm, RegisterVisitorForm
 
 
 # Custom decorator to validate JWT
 # flask_jwt_extended.set_access_cookies is not working properly
-def login_required():
+def login_required_jwt():
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
@@ -37,12 +41,13 @@ def login_required():
 
 # Inject current_user object to all templates
 # This is to control sidebar menu based on user access
-@app.context_processor
+# @app.context_processor
 def inject_dict_for_all_templates():
     access_token = request.cookies.get('access_token')
     try:
         if access_token:
-            data = jwt_lib.decode(access_token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
+            data = jwt_lib.decode(
+                access_token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
             return dict(current_user=data['sub'])
         else:
             return dict()
@@ -51,55 +56,99 @@ def inject_dict_for_all_templates():
 
 
 # ------------- FRONTEND -------------
-
 class Login(Resource):
     def get(self):
-        template = render_template('home.html')
-        return make_response(template, 200)
+        if current_user.is_authenticated:
+            return redirect(url_for(self.get_default_page(current_user)))
+
+        form = LoginForm()
+        return make_response(render_template('home.html', form=form), 200)
 
     def post(self):
-        email = request.json.get("email", None)
-        password = request.json.get("password", None)
+        form = LoginForm()
+        if form.validate_on_submit():
+            email = form.email.data
+            password = form.password.data
 
-        user = models.User.query.filter_by(email=email).one_or_none()
+            user = models.User.query.filter_by(email=email).one_or_none()
+            if user is None:
+                raise APIError(404, 'Email is not exist')
+            elif not user.check_password(password):
+                raise APIError(401, 'Wrong email or password')
+            else:
+                # JWT create access token
+                # access_token = create_access_token(identity=user)
+                # return {'access_token': access_token}
 
-        if user is None:
-            raise APIError(404, 'Email is not exist')
-        elif not user.check_password(password):
-            raise APIError(401, 'Wrong email or password')
+                login_user(user)
+                next = request.args.get('next')
+                if next:
+                    print(next)
+                    if not is_safe_url(next):
+                        raise APIError(400, 'Bad Request')
+
+                    return jsonify(redirect=next)
+
+                default_redirect_url = self.get_default_page(user)
+
+                if default_redirect_url is None:
+                    raise APIError(400, 'Bad Request')
+
+                return jsonify(redirect=default_redirect_url)
         else:
-            access_token = create_access_token(identity=user)
-            return {'access_token': access_token}
+            raise APIError(400, "Form is not valid")
+
+    def get_default_page(self, user):
+        if user.role == 'administrator':
+            return '/users'
+        elif user.role == 'guard':
+            return '/visitor-records'
+        elif user.role == 'apartment_owner':
+            return '/register-visitor'
+        else:
+            return None
 
 
 class Logout(Resource):
-    @login_required()
+    @login_required
     def get(self):
-        response = make_response(render_template('home.html'), 200)
-        response.delete_cookie('access_token')
-        return response
+        # response = make_response(render_template('home.html'), 200)
+        # response.delete_cookie('access_token')
+        # return response
+        logout_user()
+        return redirect(url_for('login'))
 
 
 class VisitorRecords(Resource):
-    @login_required()
+    @login_required
     def get(self):
         return make_response(render_template('admin/visitor_records.html'), 200)
 
 
 class Users(Resource):
-    @login_required()
+    @login_required
     def get(self):
-        return make_response(render_template('admin/user_list.html'), 200)
+        edit_form = EditUserForm()
+        create_form = CreateUserForm()
+        return make_response(
+            render_template(
+                'admin/user_list.html',
+                edit_form=edit_form,
+                create_form=create_form,
+            ),
+            200)
 
 
 class RegisterVisitorPage(Resource):
-    @login_required()
+    @login_required
     def get(self):
-        return make_response(render_template('admin/register_visitor.html'), 200)
+        form = RegisterVisitorForm()
+        form.current_user_id.data = current_user.id
+        return make_response(render_template('admin/register_visitor.html', form=form), 200)
 
 
 class Index(Resource):
-    @login_required()
+    @login_required
     def get(self):
         return redirect('/users')
 
@@ -107,7 +156,7 @@ class Index(Resource):
 # ------------- BACKEND -------------
 
 class UserDatatables(Resource):
-    @login_required()
+    @login_required
     def get(self):
         search = request.args.get('search[value]') or None
         start = int(request.args.get('start')) or 0
@@ -117,7 +166,7 @@ class UserDatatables(Resource):
                 <i class="material-icons">edit</i>
                 <div class="ripple-container"></div>
             </button>
-            <button type="button" rel="tooltip" class="btn btn-danger remove">
+            <button type="submit" rel="tooltip" class="btn btn-danger remove">
                 <i class="material-icons">close</i>
                 <div class="ripple-container"></div>
             </button>
@@ -147,7 +196,7 @@ class UserDatatables(Resource):
             dt_data = {
                 "DT_RowAttr": {
                     "data-id": user.id,
-                    "data-user": json.dumps(user_data)
+                    "data-user": json.dumps(user_data),
                 },
             }
             res.append({**dt_data, **user_data, **{'action': action_button}})
@@ -159,73 +208,80 @@ class UserDatatables(Resource):
 
 
 class User(Resource):
-    @login_required()
+    @login_required
     def post(self):
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        name = data.get('name')
-        apartment_number = data.get('apartment_number')
-        role = data.get('role')
+        form = CreateUserForm()
+        if form.validate_on_submit():
+            email = form.email.data
+            password = form.password.data
+            name = form.name.data
+            apartment_number = form.apartment_number.data
+            role = form.role.data
 
-        # Check email exist
-        is_exist = models.User.query.filter_by(email=email).first()
-        if (is_exist):
-            raise APIError(400, 'Email exists')
+            # Check email exist
+            is_exist = models.User.query.filter_by(email=email).first()
+            if (is_exist):
+                raise APIError(400, 'Email exists')
 
-        new_user = models.User(
-            email=email,
-            password=password,
-            name=name,
-            apartment_number=apartment_number,
-            role=role,
-            created_date=datetime.datetime.now(),
-            updated_date=datetime.datetime.now()
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        res = {
-            'id': new_user.id,
-            'email': new_user.email,
-            'name': new_user.name,
-            'apartment_number': new_user.apartment_number,
-            'role': new_user.role,
-        }
-        return res
-
-    @login_required()
-    def put(self):
-        data = request.get_json()
-        name = data.get('name')
-        email = data.get('email')
-        apartment_number = data.get('apartment_number')
-        role = data.get('role')
-
-        # Check email exist
-        is_exist = models.User.query.filter_by(email=email).first()
-        if (is_exist):
-            existing_user = db.session.query(models.User).filter(
-                models.User.email == email).first()
-            existing_user.email = email
-            existing_user.name = name
-            existing_user.apartment_number = apartment_number
-            existing_user.role = role
-            existing_user.updated_date = datetime.datetime.now()
+            new_user = models.User(
+                email=email,
+                password=password,
+                name=name,
+                apartment_number=apartment_number,
+                role=role,
+                created_date=datetime.datetime.now(),
+                updated_date=datetime.datetime.now()
+            )
+            db.session.add(new_user)
             db.session.commit()
             res = {
-                'id': existing_user.id,
-                'email': existing_user.email,
-                'name': existing_user.name,
-                'apartment_number': existing_user.apartment_number,
-                'role': existing_user.role,
+                'id': new_user.id,
+                'email': new_user.email,
+                'name': new_user.name,
+                'apartment_number': new_user.apartment_number,
+                'role': new_user.role,
             }
-
             return res
         else:
-            raise APIError(404, 'Email is not exist')
+            raise APIError(400, "Form is not valid")
 
-    @login_required()
+    @login_required
+    def put(self):
+        form = EditUserForm()
+        if form.validate_on_submit():
+            email = form.email.data
+            name = form.name.data
+            apartment_number = form.apartment_number.data
+            role = form.role.data
+
+            # Check email exist
+            is_exist = models.User.query.filter_by(email=email).first()
+            if (is_exist):
+                existing_user = db.session.query(models.User).filter(
+                    models.User.email == email).first()
+                existing_user.email = email
+                existing_user.name = name
+                existing_user.apartment_number = apartment_number
+                existing_user.role = role
+                existing_user.updated_date = datetime.datetime.now()
+                db.session.commit()
+                res = {
+                    'id': existing_user.id,
+                    'email': existing_user.email,
+                    'name': existing_user.name,
+                    'apartment_number': existing_user.apartment_number,
+                    'role': existing_user.role,
+                }
+
+                return res
+            else:
+                raise APIError(404, 'Email is not exist')
+        else:
+            raise APIError(400, "Form is not valid")
+
+    @login_required
     def delete(self, user_id):
+        print('masuk', user_id)
         existing_user = db.session.query(
             models.User).filter_by(id=user_id).first()
         if (existing_user):
@@ -233,11 +289,11 @@ class User(Resource):
             db.session.delete(existing_user)
             db.session.commit()
 
-        return {'response': 'User has been deleted successfully', 'status': 200}
+        return jsonify(response='User has been deleted successfully')
 
 
 class VisitorRecordsDatatables(Resource):
-    @login_required()
+    @login_required
     def get(self):
         search = request.args.get('search[value]') or None
         start = int(request.args.get('start')) or 0
@@ -290,40 +346,44 @@ class VisitorRecordsDatatables(Resource):
 
 
 class RegisterVisitor(Resource):
-    @login_required()
+    @login_required
     def post(self):
-        data = request.get_json()
-        owner_id = data.get('user_id')
-        guest_name = data.get('guest_name')
-        guest_email = data.get('guest_email')
-        guest_id = data.get('guest_id')
-        guest_car_number = data.get('guest_car_number')
-        no_of_guests = data.get('no_of_guests')
-        now = datetime.datetime.now()
-        qr_code = generate_qr_code(
-            'owner:{}|guest:{}|time:{}'.format(owner_id, guest_email, now))
+        form = RegisterVisitorForm()
+        if form.validate_on_submit():
+            owner_id = form.current_user_id.data
+            guest_name = form.guest_name.data
+            guest_email = form.guest_email.data
+            guest_id = form.guest_id.data
+            guest_car_number = form.guest_car_no.data
+            no_of_guests = form.no_of_guests.data
+            now = datetime.datetime.now()
+            qr_code = generate_qr_code(
+                'owner:{}|guest:{}|time:{}'.format(owner_id, guest_email, now))
 
-        new_visitor = models.VisitorRecords(
-            owner_id=owner_id,
-            guest_name=guest_name,
-            guest_id=guest_id,
-            guest_email=guest_email,
-            guest_car_number=guest_car_number,
-            no_of_guests=no_of_guests,
-            qr_code=qr_code,
-            created_date=now,
-            updated_date=now
-        )
-        db.session.add(new_visitor)
-        db.session.commit()
-        res = {
-            'id': new_visitor.id,
-            'guest_name': new_visitor.guest_name,
-            'guest_email': new_visitor.guest_email,
-            'qr_code': new_visitor.qr_code,
-        }
-        send_email(new_visitor.guest_name, new_visitor.guest_email, new_visitor.qr_code)
-        return res
+            new_visitor = models.VisitorRecords(
+                owner_id=owner_id,
+                guest_name=guest_name,
+                guest_id=guest_id,
+                guest_email=guest_email,
+                guest_car_number=guest_car_number,
+                no_of_guests=no_of_guests,
+                qr_code=qr_code,
+                created_date=now,
+                updated_date=now
+            )
+            db.session.add(new_visitor)
+            db.session.commit()
+            res = {
+                'id': new_visitor.id,
+                'guest_name': new_visitor.guest_name,
+                'guest_email': new_visitor.guest_email,
+                'qr_code': new_visitor.qr_code,
+            }
+            send_email(new_visitor.guest_name,
+                       new_visitor.guest_email, new_visitor.qr_code)
+            return res
+        else:
+            raise APIError(400, "Form is not valid")
 
 
 def generate_qr_code(data):
@@ -354,7 +414,8 @@ def generate_qr_code(data):
 def send_email(recipient_name, recipient_email, qr_code):
     try:
         msg = Message("Visistor Registration", recipients=[recipient_email])
-        msg.body = 'Hi {}, your data has been registered as visitor'.format(recipient_name)
+        msg.body = 'Hi {}, your data has been registered as visitor'.format(
+            recipient_name)
         with app.open_resource("qr_code/{}.png".format(qr_code)) as fp:
             msg.attach("qr_code.png", "image/png", fp.read())
 
@@ -365,6 +426,12 @@ def send_email(recipient_name, recipient_email, qr_code):
 
 
 # ------------- ERROR HANDLER -------------
+
+@login_manager.unauthorized_handler
+def unauthorized_access():
+    next = url_for(request.endpoint, **request.view_args)
+    return redirect(url_for('login', next=next))
+
 
 class APIError(Exception):
     """All custom API Exceptions"""
@@ -385,7 +452,7 @@ class APIAuthError(APIError):
 @app.errorhandler(APIError)
 def handle_exception(err):
     """Return custom JSON when APIError or its children are raised"""
-    response = {"error": err.description}
+    response = {"message": err.description}
     print("Exception: {}".format(str(err.description)))
     return jsonify(response), err.code
 
@@ -394,5 +461,10 @@ def handle_exception(err):
 def handle_exception(err):
     """Return JSON instead of HTML for any other server error"""
     print("Unknown Exception: {}".format(str(err)))
-    response = {"error": "Internal Server Error"}
+    response = {"message": "Internal Server Error"}
     return jsonify(response), 500
+
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return APIError(400, e)

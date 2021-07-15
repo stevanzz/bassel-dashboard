@@ -1,6 +1,7 @@
 {% extends 'admin/base.html' %}
 {% set active_page = 'User List' %}
 {% block content %}
+<meta name="csrf_token" content="{{ edit_form.csrf_token.current_token }}">
 <div class="content">
   <div class="container-fluid">
     <div class="row">
@@ -41,51 +42,31 @@
                         <div class="card">
                           <div class="card-body">
                             <div class="form-group bmd-form-group">
-                              <label for="email" class="bmd-label-floating">Email Address
-                                * </label>
-                              <input type="email" class="form-control" id="email-input" name="email-input" required="true"
-                                aria-required="true" disabled>
-                                <input type="hidden" name="email" id="email" value="">
+                              {{edit_form.email.label(class="bmd-label-floating")}}
+                              {{edit_form.email(class="form-control")}}
                             </div>
                             <div class="form-group bmd-form-group">
-                              <label for="name" class="bmd-label-floating">Name * </label>
-                              <input type="text" class="form-control" id="name" name="name" required="true"
-                                aria-required="true">
+                              {{edit_form.name.label(class="bmd-label-floating")}}
+                              {{edit_form.name(class="form-control")}}
                             </div>
                             <div class="form-group bmd-form-group">
-                              <label for="apartment_number" class="bmd-label-floating">Apartment Number</label>
-                              <input type="text" class="form-control" id="apartment_number" name="apartment_number">
+                              {{edit_form.apartment_number.label(class="bmd-label-floating")}}
+                              {{edit_form.apartment_number(class="form-control")}}
                             </div>
                             <div class="row">
-                              <label class="col-sm-3 col-form-label label-checkbox">Role</label>
+                              {{edit_form.role.label(class="col-sm-3 col-form-label label-checkbox")}}
                               <div class="col-sm-9 checkbox-radios">
+                                {% for choices in edit_form.role %}
                                 <div class="form-check">
                                   <label class="form-check-label">
-                                    <input class="form-check-input" type="radio" id="administrator" name="role"
-                                      value="administrator">Administrator</input>
+                                    {{choices(class="form-check-input")}}
+                                    {{choices.label}}
                                     <span class="circle">
                                       <span class="check"></span>
                                     </span>
                                   </label>
                                 </div>
-                                <div class="form-check">
-                                  <label class="form-check-label">
-                                    <input class="form-check-input" type="radio" id="guard" name="role"
-                                      value="guard">Guard</input>
-                                    <span class="circle">
-                                      <span class="check"></span>
-                                    </span>
-                                  </label>
-                                </div>
-                                <div class="form-check">
-                                  <label class="form-check-label">
-                                    <input class="form-check-input" type="radio" id="apartment_owner" name="role"
-                                      value="apartment_owner">Apartment Owner</input>
-                                    <span class="circle">
-                                      <span class="check"></span>
-                                    </span>
-                                  </label>
-                                </div>
+                                {% endfor %}
                               </div>
                             </div>
                           </div>
@@ -117,69 +98,40 @@
                       <form id="RegisterValidation" novalidate>
                         <div class="card">
                           <div class="card-body">
-                            <!-- <div class="form-group bmd-form-group">
-                              <label for="username" class="bmd-label-floating">Username
-                                *</label>
-                              <input type="text" class="form-control" id="username" name="username" required="true"
-                                aria-required="true">
-                            </div> -->
                             <div class="form-group bmd-form-group">
-                              <label for="email" class="bmd-label-floating">Email Address
-                                * </label>
-                              <input type="email" class="form-control" id="email" name="email" required="true"
-                                aria-required="true">
+                              {{create_form.email.label(class="bmd-label-floating")}}
+                              {{create_form.email(class="form-control")}}
                             </div>
                             <div class="form-group bmd-form-group">
-                              <label for="password" class="bmd-label-floating">Password
-                                *</label>
-                              <input type="password" class="form-control" id="register-password" required="true"
-                                name="password" aria-required="true">
+                              {{create_form.password.label(class="bmd-label-floating")}}
+                              {{create_form.password(class="form-control")}}
                             </div>
                             <div class="form-group bmd-form-group">
-                              <label for="password1" class="bmd-label-floating">Confirm
-                                Password *</label>
-                              <input type="password" class="form-control" id="register-password1" required="true"
-                                equalto="#register-password" name="password_confirmation" aria-required="true">
+                              {{create_form.password_confirmation.label(class="bmd-label-floating")}}
+                              {{create_form.password_confirmation(class="form-control")}}
                             </div>
                             <div class="form-group bmd-form-group">
-                              <label for="name" class="bmd-label-floating">Name * </label>
-                              <input type="text" class="form-control" id="name" name="name" required="true"
-                                aria-required="true">
+                              {{create_form.name.label(class="bmd-label-floating")}}
+                              {{create_form.name(class="form-control")}}
                             </div>
                             <div class="form-group bmd-form-group">
-                              <label for="apartment_number" class="bmd-label-floating">Apartment Number</label>
-                              <input type="text" class="form-control" id="apartment_number" name="apartment_number">
+                              {{create_form.apartment_number.label(class="bmd-label-floating")}}
+                              {{create_form.apartment_number(class="form-control")}}
                             </div>
                             <div class="row">
-                              <label class="col-sm-3 col-form-label label-checkbox">Role</label>
+                              {{create_form.role.label(class="col-sm-3 col-form-label label-checkbox")}}
                               <div class="col-sm-9 checkbox-radios">
+                                {% for choices in create_form.role %}
                                 <div class="form-check">
                                   <label class="form-check-label">
-                                    <input class="form-check-input" type="radio" id="administrator" name="role"
-                                      value="administrator">Administrator</input>
+                                    {{choices(class="form-check-input")}}
+                                    {{choices.label}}
                                     <span class="circle">
                                       <span class="check"></span>
                                     </span>
                                   </label>
                                 </div>
-                                <div class="form-check">
-                                  <label class="form-check-label">
-                                    <input class="form-check-input" type="radio" id="guard" name="role"
-                                      value="guard">Guard</input>
-                                    <span class="circle">
-                                      <span class="check"></span>
-                                    </span>
-                                  </label>
-                                </div>
-                                <div class="form-check">
-                                  <label class="form-check-label">
-                                    <input class="form-check-input" type="radio" id="apartment_owner" name="role"
-                                      value="apartment_owner">Apartment Owner</input>
-                                    <span class="circle">
-                                      <span class="check"></span>
-                                    </span>
-                                  </label>
-                                </div>
+                                {% endfor %}
                               </div>
                             </div>
                           </div>
@@ -246,12 +198,18 @@
       var is_valid = form.valid();
       if (is_valid) {
         var values = getFormData(form);
+        var csrftoken = $('meta[name=csrf_token]').prop('content');
 
         $.ajax({
           type: "POST",
           url: '/api/user',
           contentType: "application/json; charset=utf-8",
           data: JSON.stringify(values),
+          beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+          },
           success: function (data) {
             var success = '<div class="alert alert-success" role="alert">User has been created!</div>';
             $('#RegisterValidation').prepend(success);
@@ -264,9 +222,9 @@
             document.getElementById("RegisterValidation").reset();
           },
           error: function (request, error) {
-            // Create an error
+            const response = request.responseJSON
             $('#RegisterValidation > .alert-danger').remove();
-            var error = '<div class="alert alert-danger" role="alert">Username already exist</div>';
+            var error = `<div class="alert alert-danger" role="alert">${response.message}</div>`;
             $('#RegisterValidation').prepend(error);
           },
         });
@@ -280,12 +238,18 @@
       var is_valid = form.valid();
       if (is_valid) {
         var values = getFormData(form);
+        var csrftoken = $('meta[name=csrf_token]').prop('content');
 
         $.ajax({
           type: "PUT",
           url: '/api/user',
           contentType: "application/json; charset=utf-8",
           data: JSON.stringify(values),
+          beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+          },
           success: function (data) {
             var success = '<div class="alert alert-success" role="alert">User has been updated!</div>';
             $('#modifyUser').prepend(success);
@@ -298,9 +262,9 @@
             // document.getElementById("modifyUser").reset();
           },
           error: function (request, error) {
-            // Create an error
+            const response = request.responseJSON
             $('#modifyUser > .alert-danger').remove();
-            var error = '<div class="alert alert-danger" role="alert">Username is not exist</div>';
+            var error = `<div class="alert alert-danger" role="alert">${response.message}</div>`;
             $('#modifyUser').prepend(error);
           },
         });
@@ -348,9 +312,8 @@
         $tr = $tr.prev('.parent');
       }
       var data = JSON.parse($tr.attr("data-user"))
-      $("#modifyUser #email-input").val(data.email);
-      $("#modifyUser #email-input").parent().addClass("is-filled");
       $("#modifyUser #email").val(data.email);
+      $("#modifyUser #email").parent().addClass("is-filled");
       $("#modifyUser #name").val(data.name);
       $("#modifyUser #name").parent().addClass("is-filled");
       $("#modifyUser #apartment_number").val(data.apartment_number);
@@ -376,6 +339,7 @@
         $tr = $tr.prev('.parent');
       }
       var data = table.row($tr).data();
+      var csrftoken = $('meta[name=csrf_token]').prop('content');
       const confirm_msg = `Are you sure want to delete \nemail: ${data['email']} ?`;
       if (confirm(confirm_msg)) {
         const url = `/api/user/${data_id}`
@@ -383,13 +347,16 @@
           type: "DELETE",
           url: url,
           contentType: "application/json; charset=utf-8",
+          beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+              xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+          },
           success: function (data) {
             table.row($tr).remove().draw();
           }
-
         });
         console.log('Thing was saved to the database.', data_id);
-
       }
     });
 

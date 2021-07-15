@@ -20,11 +20,11 @@ class TestingConfig(Config):
     TESTING = True
 
 
-class DevelopmentConfig(Config):
+class DevelopmentConfigJWT(Config):
     ENV = 'Development'
     DEBUG = True
     DEVELOPMENT = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://[username]:[password]@localhost:5432/[database_name]'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:openpgpwd@localhost:5432/bassel'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_TOKEN_LOCATION = ['cookies']
     JWT_SECRET_KEY = 'super-secret'  # To be changed in different environment
@@ -35,8 +35,24 @@ class DevelopmentConfig(Config):
     JWT_REFRESH_CSRF_HEADER_NAME = "X-CSRF-TOKEN-REFRESH"
     MAIL_SERVER = 'smtp.mailtrap.io'
     MAIL_PORT = 2525
-    MAIL_USERNAME = '1d184d2b3791cb' # personal username
-    MAIL_PASSWORD = 'b6c189ec5cb071' # personal password
+    MAIL_USERNAME = '1d184d2b3791cb'  # personal username
+    MAIL_PASSWORD = 'b6c189ec5cb071'  # personal password
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
+    MAIL_DEFAULT_SENDER = 'dev@gmail.com'
+
+
+class DevelopmentConfig(Config):
+    ENV = 'Development'
+    DEBUG = True
+    DEVELOPMENT = True
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:openpgpwd@localhost:5432/bassel'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = '7d134cfb70683a0ca33530a778f4e630'
+    MAIL_SERVER = 'smtp.mailtrap.io'
+    MAIL_PORT = 2525
+    MAIL_USERNAME = '1d184d2b3791cb'  # personal username
+    MAIL_PASSWORD = 'b6c189ec5cb071'  # personal password
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False
     MAIL_DEFAULT_SENDER = 'dev@gmail.com'

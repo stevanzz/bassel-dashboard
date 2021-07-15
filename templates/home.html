@@ -14,25 +14,22 @@
             <img id="profile-img" class="profile-img-card" src="//ssl.gstatic.com/accounts/ui/avatar_2x.png" />
             <p id="profile-name" class="profile-name-card"></p>
             <form id="loginForm" novalidate class="form-signin">
+                {{ form.csrf_token }}
                 <span id="reauth-email" class="reauth-email"></span>
-                <input id="input-email" class="form-control" placeholder="Email" name="email" required autofocus>
-                <input type="password" id="input-password" class="form-control" placeholder="Password" name="password"
-                    required>
-                <!--                <div id="remember" class="checkbox">-->
-                <!--                    <label>-->
-                <!--                        <input type="checkbox" value="remember-me"> Remember me-->
-                <!--                    </label>-->
-                <!--                </div>-->
+                {{form.email(class="form-control", placeholder="Email")}}
+                {{form.password(class="form-control", placeholder="Password")}}
+                <!-- <div id="remember" class="checkbox">
+                    <label>
+                        <input type="checkbox" value="remember-me"> Remember me
+                    </label>
+                </div> -->
                 <button class="btn btn-lg btn-primary btn-block btn-signin" type="submit">Sign in</button>
-            </form><!-- /form -->
-            <!--            <a href="#" class="forgot-password">-->
-            <!--                Forgot the password?-->
-            <!--            </a>-->
-        </div><!-- /card-container -->
-    </div><!-- /container -->
-
-
-
+            </form>
+            <!-- <a href="#" class="forgot-password">
+                Forgot the password?
+            </a> -->
+        </div>
+    </div>
 
 
     <script src="{{ url_for('static', filename='js/core/jquery.min.js') }}"></script>
@@ -60,23 +57,34 @@
                 var is_valid = form.valid();
                 if (is_valid) {
                     var values = getFormData(form);
+                    var csrftoken = values.csrf_token
+
                     $.ajax({
                         type: "POST",
-                        url: '/login',
+                        url: '/login' + window.location.search,
                         cache: false,
                         contentType: "application/json; charset=utf-8",
                         data: JSON.stringify(values),
+                        beforeSend: function (xhr, settings) {
+                            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                            }
+                        },
                         success: function (response) {
-                            if (response.access_token) {
-                                document.cookie = 'access_token=' + response.access_token
-                                window.location.href = '/users'
+                            // JWT login
+                            // if (response.access_token) {
+                            //     document.cookie = 'access_token=' + response.access_token
+                            //     window.location.href = '/users'
+                            // }
+                            if (response.redirect) {
+                                window.location.href = response.redirect
                             }
                         },
                         error: function (request, error) {
                             response = request.responseJSON
                             // Create an Error
                             $('#loginForm > .alert-danger').remove();
-                            var error = `<div class="alert alert-danger" role="alert">${response.error}</div>`;
+                            var error = `<div class="alert alert-danger" role="alert">${response.message}</div>`;
                             $('#loginForm').prepend(error);
                         },
                     });
