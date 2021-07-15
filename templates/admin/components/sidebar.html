@@ -13,7 +13,7 @@
     <ul class="nav">
       {% if current_user.role == 'administrator' or current_user.role == 'guard' %}
       <li class="nav-item {% if active_page == 'Visitor Records' %} active {% endif %} ">
-        <a class="nav-link" href="./visitor-records">
+        <a class="nav-link" href="{{ url_for('visitorrecords') }}">
           <i class="material-icons">receipt</i>
           <p>Visitor Records</p>
         </a>
@@ -21,7 +21,7 @@
       {% endif %}
       {% if current_user.role == 'administrator' %}
       <li class="nav-item {% if active_page == 'User List' %} active {% endif %} ">
-        <a class="nav-link" href="./users">
+        <a class="nav-link" href="{{ url_for('users') }}">
           <i class="material-icons">content_paste</i>
           <p>User List</p>
         </a>
@@ -29,7 +29,7 @@
       {% endif %}
       {% if current_user.role == 'administrator' or current_user.role == 'apartment_owner' %}
       <li class="nav-item {% if active_page == 'Register Visitor' %} active {% endif %} ">
-        <a class="nav-link" href="./register-visitor">
+        <a class="nav-link" href="{{ url_for('registervisitorpage') }}">
           <i class="material-icons">qr_code</i>
           <p>Register Visitor</p>
         </a>
