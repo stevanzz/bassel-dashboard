@@ -43,7 +43,6 @@ class VisitorRecords(db.Model):
     guest_email = db.Column(db.String(200), nullable=False)
     guest_car_number = db.Column(db.String(20))
     no_of_guests = db.Column(db.Integer, nullable=False)
-    qr_code = db.Column(db.String(500), nullable=False, index=True, unique=True)
     created_date = db.Column(db.DateTime, index=False, unique=False,
                              nullable=False, default=datetime.datetime.now())
     updated_date = db.Column(db.DateTime, index=False, unique=False,
@@ -58,7 +57,6 @@ class VisitorRecords(db.Model):
             'guest_email': self.guest_email,
             'guest_car_number': self.guest_car_number,
             'no_of_guests': self.no_of_guests,
-            'qr_code': self.qr_code,
             'created_date': self.created_date,
             'updated_date': self.updated_date,
         }

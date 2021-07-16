@@ -1,0 +1,48 @@
+{% extends 'admin/base.html' %}
+{% set active_page = 'Visitor Entry' %}
+
+{% block content %}
+<div class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header card-header-primary card-header-icon">
+            <div class="card-icon">
+              <i class="material-icons">assignment</i>
+            </div>
+            <h4 class="card-title">Visitor Entry</h4>
+          </div>
+          <div class="card-body">
+            <div class="form-group bmd-form-group">
+              <label for="qr_code" class="bmd-label-floating">Record ID</label>
+              <input type="text" class="form-control" id="qr_code" name="qr_code" value="{{ data.ID }}" disabled>
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="apartment_number" class="bmd-label-floating">Apartment No</label>
+              <input type="text" class="form-control" id="apartment_number" name="apartment_number" value="{{ data.apartment_number }}" disabled>
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="owner_email" class="bmd-label-floating">Owner's Email</label>
+              <input type="email" class="form-control" id="owner_email" name="owner_email" value="{{ data.owner_email }}" disabled>
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="guest_name" class="bmd-label-floating">Guest Name</label>
+              <input type="text" class="form-control" id="guest_name" name="guest_name" value="{{ data.guest_name }}" disabled>
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="guest_id" class="bmd-label-floating">Guest ID</label>
+              <input type="text" class="form-control" id="guest_id" name="guest_id" value="{{ data.guest_id }}" disabled>
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="guest_car_number" class="bmd-label-floating">Guest Car No</label>
+              <input type="text" class="form-control" id="guest_car_number" name="guest_car_number" value="{{ data.guest_car_number }}" disabled>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

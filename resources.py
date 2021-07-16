@@ -12,7 +12,7 @@ import json
 import datetime
 import base64
 import qrcode
-from utils import is_safe_url
+from utils import is_safe_url, Admin, Guard, Apartment_Owner
 from forms import LoginForm, EditUserForm, CreateUserForm, RegisterVisitorForm
 
 
@@ -31,6 +31,21 @@ def login_required_jwt():
                     access_token, app.config['JWT_SECRET_KEY'], algorithms=["HS256"])
             except Exception as e:
                 return redirect(url_for('login'))
+
+            return fn(*args, **kwargs)
+
+        return decorator
+
+    return wrapper
+
+
+# Custom decorator to restrict user access
+def user_access_control(*roles):
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            if current_user.role not in roles:
+                return make_response(jsonify(response="Your account doesn't have access to this page"), 403)
 
             return fn(*args, **kwargs)
 
@@ -83,7 +98,6 @@ class Login(Resource):
                 login_user(user)
                 next = request.args.get('next')
                 if next:
-                    print(next)
                     if not is_safe_url(next):
                         raise APIError(400, 'Bad Request')
 
@@ -121,12 +135,14 @@ class Logout(Resource):
 
 class VisitorRecords(Resource):
     @login_required
+    @user_access_control(Admin, Guard)
     def get(self):
         return make_response(render_template('admin/visitor_records.html'), 200)
 
 
 class Users(Resource):
     @login_required
+    @user_access_control(Admin)
     def get(self):
         edit_form = EditUserForm()
         create_form = CreateUserForm()
@@ -141,10 +157,39 @@ class Users(Resource):
 
 class RegisterVisitorPage(Resource):
     @login_required
+    @user_access_control(Admin, Apartment_Owner)
     def get(self):
         form = RegisterVisitorForm()
         form.current_user_id.data = current_user.id
         return make_response(render_template('admin/register_visitor.html', form=form), 200)
+
+
+class QRcodeViewer(Resource):
+    @login_required
+    @user_access_control(Admin, Guard)
+    def get(self, QR_code):
+        try:
+            base64_bytes = QR_code.encode('ascii')
+            message_bytes = base64.b64decode(base64_bytes)
+            message = json.loads(message_bytes.decode('ascii'))
+            record_id = message.get('record_id')
+             # Check QR code exist
+            record = models.VisitorRecords.query.filter_by(id=record_id).first()
+            if not record:
+                raise APIError(400, 'Record is not found')
+
+            user = models.User.query.filter_by(id=record.owner_id).first()
+            data = {
+                "ID": record.id,
+                "apartment_number": user.apartment_number,
+                "owner_email": user.email,
+                "guest_name": record.guest_name,
+                "guest_id": record.guest_id,
+                "guest_car_number": record.guest_car_number,
+            }
+            return make_response(render_template('admin/qr_viewer.html', data=data), 200)
+        except Exception as e:
+            raise APIError(400, "QR Code is not valid")
 
 
 class Index(Resource):
@@ -281,7 +326,6 @@ class User(Resource):
 
     @login_required
     def delete(self, user_id):
-        print('masuk', user_id)
         existing_user = db.session.query(
             models.User).filter_by(id=user_id).first()
         if (existing_user):
@@ -308,7 +352,7 @@ class VisitorRecordsDatatables(Resource):
         total_records = db.session.query(models.VisitorRecords).count()
         if search:
             query = models.VisitorRecords.query.filter(
-                models.VisitorRecords.qr_code.contains(search)).order_by(models.VisitorRecords.created_date.desc())
+                models.VisitorRecords.guest_name.contains(search)).order_by(models.VisitorRecords.created_date.desc())
         else:
             query = models.VisitorRecords.query.order_by(
                 models.VisitorRecords.created_date.desc())
@@ -323,7 +367,7 @@ class VisitorRecordsDatatables(Resource):
         for record in query:
             user = models.User.query.filter_by(id=record.owner_id).first()
             visitor_data = {
-                "qr_code": record.qr_code,
+                "ID": record.id,
                 "apartment_number": user.apartment_number,
                 "owner_email": user.email,
                 "guest_name": record.guest_name,
@@ -357,8 +401,6 @@ class RegisterVisitor(Resource):
             guest_car_number = form.guest_car_no.data
             no_of_guests = form.no_of_guests.data
             now = datetime.datetime.now()
-            qr_code = generate_qr_code(
-                'owner:{}|guest:{}|time:{}'.format(owner_id, guest_email, now))
 
             new_visitor = models.VisitorRecords(
                 owner_id=owner_id,
@@ -367,20 +409,21 @@ class RegisterVisitor(Resource):
                 guest_email=guest_email,
                 guest_car_number=guest_car_number,
                 no_of_guests=no_of_guests,
-                qr_code=qr_code,
                 created_date=now,
                 updated_date=now
             )
             db.session.add(new_visitor)
             db.session.commit()
+            qr_code = generate_qr_code(
+                json.dumps({'record_id': new_visitor.id}))
             res = {
                 'id': new_visitor.id,
                 'guest_name': new_visitor.guest_name,
                 'guest_email': new_visitor.guest_email,
-                'qr_code': new_visitor.qr_code,
+                'qr_code': qr_code,
             }
             send_email(new_visitor.guest_name,
-                       new_visitor.guest_email, new_visitor.qr_code)
+                       new_visitor.guest_email, qr_code)
             return res
         else:
             raise APIError(400, "Form is not valid")
@@ -400,7 +443,7 @@ def generate_qr_code(data):
             box_size=10,
             border=4,
         )
-        qr.add_data(base64_message)
+        qr.add_data('localhost:5000/' + base64_message)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black",
                             back_color="white").convert('RGB')
@@ -454,7 +497,7 @@ def handle_exception(err):
     """Return custom JSON when APIError or its children are raised"""
     response = {"message": err.description}
     print("Exception: {}".format(str(err.description)))
-    return jsonify(response), err.code
+    return make_response(jsonify(response), err.code)
 
 
 @app.errorhandler(500)
@@ -462,7 +505,7 @@ def handle_exception(err):
     """Return JSON instead of HTML for any other server error"""
     print("Unknown Exception: {}".format(str(err)))
     response = {"message": "Internal Server Error"}
-    return jsonify(response), 500
+    return make_response(jsonify(response), 500)
 
 
 @app.errorhandler(CSRFError)

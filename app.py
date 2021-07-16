@@ -42,6 +42,7 @@ api.add_resource(resources.UserDatatables, '/api/users')
 api.add_resource(resources.User, '/api/user', '/api/user/<user_id>')
 api.add_resource(resources.VisitorRecordsDatatables, '/api/visitor-records')
 api.add_resource(resources.RegisterVisitor, '/api/register-visitor')
+api.add_resource(resources.QRcodeViewer, '/<QR_code>')
 
 api.add_resource(resources.Index, '/')
 

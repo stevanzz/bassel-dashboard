@@ -19,7 +19,7 @@
                 width="100%" style="width:100%">
                 <thead>
                   <tr>
-                    <th>Barcode</th>
+                    <th>Record ID</th>
                     <th>Apartment Number</th>
                     <th>Guest Name</th>
                     <th>Guest Car Number</th>
@@ -43,8 +43,8 @@
                         <div class="card">
                           <div class="card-body">
                             <div class="form-group bmd-form-group">
-                              <label for="qr_code" class="bmd-label-floating">QR Code</label>
-                              <input type="text" class="form-control" id="qr_code" name="qr_code" disabled>
+                              <label for="ID" class="bmd-label-floating">Record ID</label>
+                              <input type="text" class="form-control" id="ID" name="ID" disabled>
                             </div>
                             <div class="form-group bmd-form-group">
                               <label for="apartment_number" class="bmd-label-floating">Apartment No</label>
@@ -106,7 +106,7 @@
         { className: "pad-column", "targets": [6], visible: false },
       ],
       "columns": [
-        { "data": "qr_code" },
+        { "data": "ID" },
         { "data": "apartment_number" },
         { "data": "guest_name" },
         { "data": "guest_car_number" },
@@ -124,7 +124,7 @@
       responsive: true,
       language: {
         search: "Search",
-        searchPlaceholder: "Barcode",
+        searchPlaceholder: "Guest's Name",
       }
     });
 
@@ -140,8 +140,8 @@
       }
 
       var data = JSON.parse($tr.attr("data-visitor"))
-      $("#viewRecord #qr_code").val(data.qr_code);
-      $("#viewRecord #qr_code").parent().addClass("is-filled");
+      $("#viewRecord #ID").val(data.ID);
+      $("#viewRecord #ID").parent().addClass("is-filled");
       $("#viewRecord #apartment_number").val(data.apartment_number);
       $("#viewRecord #apartment_number").parent().addClass("is-filled");
       $("#viewRecord #owner_email").val(data.owner_email);
