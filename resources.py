@@ -12,7 +12,7 @@ import json
 import datetime
 import base64
 import qrcode
-from utils import is_safe_url, Admin, Guard, Apartment_Owner
+from utils import is_safe_url, Admin, Guard, Apartment_Owner, get_default_page
 from forms import LoginForm, EditUserForm, CreateUserForm, RegisterVisitorForm
 
 
@@ -74,7 +74,7 @@ def inject_dict_for_all_templates():
 class Login(Resource):
     def get(self):
         if current_user.is_authenticated:
-            return redirect(url_for(self.get_default_page(current_user)))
+            return redirect(url_for(get_default_page(current_user)))
 
         form = LoginForm()
         return make_response(render_template('home.html', form=form), 200)
@@ -103,7 +103,7 @@ class Login(Resource):
 
                     return jsonify(redirect=next)
 
-                default_redirect_url = self.get_default_page(user)
+                default_redirect_url = get_default_page(user, isJS=True)
 
                 if default_redirect_url is None:
                     raise APIError(400, 'Bad Request')
@@ -112,15 +112,7 @@ class Login(Resource):
         else:
             raise APIError(400, "Form is not valid")
 
-    def get_default_page(self, user):
-        if user.role == 'administrator':
-            return '/users'
-        elif user.role == 'guard':
-            return '/visitor-records'
-        elif user.role == 'apartment_owner':
-            return '/register-visitor'
-        else:
-            return None
+
 
 
 class Logout(Resource):
@@ -195,7 +187,7 @@ class QRcodeViewer(Resource):
 class Index(Resource):
     @login_required
     def get(self):
-        return redirect('/users')
+        return redirect(url_for(get_default_page(current_user)))
 
 
 # ------------- BACKEND -------------

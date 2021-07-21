@@ -12,3 +12,14 @@ def is_safe_url(target):
 Admin = 'administrator'
 Guard = 'guard'
 Apartment_Owner = 'apartment_owner'
+
+
+def get_default_page(user, isJS=False):
+    if user.role == 'administrator':
+        return '/users' if isJS else 'users'
+    elif user.role == 'guard':
+        return '/visitor-records' if isJS else 'visitorrecords'
+    elif user.role == 'apartment_owner':
+        return '/register-visitor' if isJS else 'registervisitorpage'
+    else:
+        return None
